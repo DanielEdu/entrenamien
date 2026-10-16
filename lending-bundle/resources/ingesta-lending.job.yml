@@ -6,6 +6,10 @@ resources:
         - {name: catalogo,    default: "${var.catalogo}"}
         - {name: esquema,     default: "${var.esquema}"}
         - {name: ruta_origen, default: "${var.ruta_origen}"}
+      schedule:
+        quartz_cron_expression: "0 0 6 * * ?"     # todos los días a las 6:00
+        timezone_id: America/Bogota
+        pause_status: PAUSED
       tasks:
         - task_key: ingesta
           for_each_task:                # la misma tarea, una vez por tabla
