@@ -1,0 +1,48 @@
+# Declarative Automation Bundle de lending_bronze: ingesta de lending a Bronze con Auto Loader.
+# Ver specs/SPEC.md. Documentación: https://docs.databricks.com/dev-tools/bundles/index.html
+bundle:
+  name: lending_bronze
+  uuid: 07d23d7a-82c7-452a-8435-77ba4f9666c9
+
+include:
+  - resources/*.yml
+
+variables:
+  catalogo:
+    description: Catálogo = producto de datos (el mismo en todos los ambientes)
+    default: lending
+  esquema:
+    description: Esquema = capa (datalab_zone en dev, bronze_zone en prod); se asigna en cada target
+  ruta_origen:
+    description: Raíz de los CSV en el Volume de landing (<ruta_origen>/<tabla>/lote=<N>/*.csv)
+    default: /Volumes/lending/landing_zone/archivos/lending
+  git_url:
+    description: Repositorio de GitHub del que el job lee el código (el mismo de este bundle)
+    default: https://github.com/DanielEdu/entrenamien.git
+  git_branch:
+    description: Rama de la que el job lee el código; se asigna en cada target
+
+targets:
+  dev:
+    # mode development: los recursos del bundle (el job) se despliegan con prefijo [dev <usuario>].
+    # Las tablas y los volumes NO llevan prefijo: son los de lending.datalab_zone.
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-dfb14324-e95d.cloud.databricks.com
+    variables:
+      esquema: datalab_zone
+      git_branch: ${bundle.git.branch}  # la rama local actual, para probar cambios antes de mergear
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-dfb14324-e95d.cloud.databricks.com
+      # Se despliega siempre en /Workspace/Users/daniel.epr77@gmail.com para tener una sola copia.
+      root_path: /Workspace/Users/daniel.epr77@gmail.com/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      esquema: bronze_zone
+      git_branch: main  # prod solo corre código que ya está en main
+    permissions:
+      - user_name: daniel.epr77@gmail.com
+        level: CAN_MANAGE

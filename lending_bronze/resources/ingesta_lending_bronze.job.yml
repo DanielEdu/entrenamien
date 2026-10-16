@@ -1,0 +1,108 @@
+resources:
+  jobs:
+    ingesta_lending_bronze:
+      name: ingesta-lending-bronze
+
+      # El código se lee de GitHub, del mismo repositorio del bundle, en cada corrida.
+      # Las rutas python_file de las tareas son relativas a la raíz del repo (el proyecto está en lending_bronze/).
+      git_source:
+        git_url: ${var.git_url}
+        git_provider: gitHub
+        git_branch: ${var.git_branch}
+
+      # Serverless: el environment del job reemplaza al cluster.
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+
+      queue:
+        enabled: true
+
+      # Una tarea por tabla, sin depends_on: corren en paralelo.
+      # Tabla nueva = una entrada en src/ingesta_lending/tablas.py + una tarea aquí.
+      tasks:
+        - task_key: productos_prestamo
+          environment_key: default
+          spark_python_task:
+            source: GIT
+            python_file: lending_bronze/src/main.py
+            parameters:
+              - --tabla
+              - productos_prestamo
+              - --catalogo
+              - ${var.catalogo}
+              - --esquema
+              - ${var.esquema}
+              - --ruta_origen
+              - ${var.ruta_origen}
+              - --job_run_id
+              - "{{job.run_id}}"
+
+        - task_key: clientes
+          environment_key: default
+          spark_python_task:
+            source: GIT
+            python_file: lending_bronze/src/main.py
+            parameters:
+              - --tabla
+              - clientes
+              - --catalogo
+              - ${var.catalogo}
+              - --esquema
+              - ${var.esquema}
+              - --ruta_origen
+              - ${var.ruta_origen}
+              - --job_run_id
+              - "{{job.run_id}}"
+
+        - task_key: solicitudes_prestamo
+          environment_key: default
+          spark_python_task:
+            source: GIT
+            python_file: lending_bronze/src/main.py
+            parameters:
+              - --tabla
+              - solicitudes_prestamo
+              - --catalogo
+              - ${var.catalogo}
+              - --esquema
+              - ${var.esquema}
+              - --ruta_origen
+              - ${var.ruta_origen}
+              - --job_run_id
+              - "{{job.run_id}}"
+
+        - task_key: desembolsos
+          environment_key: default
+          spark_python_task:
+            source: GIT
+            python_file: lending_bronze/src/main.py
+            parameters:
+              - --tabla
+              - desembolsos
+              - --catalogo
+              - ${var.catalogo}
+              - --esquema
+              - ${var.esquema}
+              - --ruta_origen
+              - ${var.ruta_origen}
+              - --job_run_id
+              - "{{job.run_id}}"
+
+        - task_key: pagos_cuotas
+          environment_key: default
+          spark_python_task:
+            source: GIT
+            python_file: lending_bronze/src/main.py
+            parameters:
+              - --tabla
+              - pagos_cuotas
+              - --catalogo
+              - ${var.catalogo}
+              - --esquema
+              - ${var.esquema}
+              - --ruta_origen
+              - ${var.ruta_origen}
+              - --job_run_id
+              - "{{job.run_id}}"
