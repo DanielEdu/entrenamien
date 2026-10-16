@@ -1,0 +1,21 @@
+resources:
+  jobs:
+    ingesta_lending:
+      name: ingesta-lending
+      parameters:                       # llegan a los widgets del notebook
+        - {name: catalogo,    default: "${var.catalogo}"}
+        - {name: esquema,     default: "${var.esquema}"}
+        - {name: ruta_origen, default: "${var.ruta_origen}"}
+      tasks:
+        - task_key: ingesta
+          for_each_task:                # la misma tarea, una vez por tabla
+            inputs: '["productos_prestamo","clientes","solicitudes_prestamo","desembolsos","pagos_cuotas"]'
+            concurrency: 2
+            task:
+              task_key: ingesta_tabla
+              notebook_task:
+                notebook_path: ../ingesta_lending.py
+                base_parameters:
+                  tabla: "{{input}}"
+      queue:
+        enabled: true
